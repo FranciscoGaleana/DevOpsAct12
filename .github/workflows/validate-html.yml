@@ -1,0 +1,57 @@
+name: Validate and Deploy HTML
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Validate HTML
+        run: |
+          if [ ! -f index.html ]; then
+            echo "index.html no encontrado!"
+            exit 1
+          else
+            echo "index.html encontrado!"
+          fi
+
+          # Validar que el formulario esté presente
+          if ! grep -q '<form id="contact-form"' index.html; then
+            echo "El formulario no está presente!"
+            exit 1
+          fi
+
+          # Validar que el campo de nombre esté presente
+          if ! grep -q 'id="name"' index.html; then
+            echo "El campo de nombre no está presente!"
+            exit 1
+          fi
+
+          echo "Validaciones de HTML completadas con éxito!"
+
+      - name: Create optimized HTML
+        run: |
+          cp index.html optimized_index.html  # Simulación de optimización
+          echo "Archivo optimizado creado como optimized_index.html"
+  
+  deploy:
+    runs-on: ubuntu-latest
+    needs: validate
+    if: success()
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./
